@@ -9,7 +9,7 @@
 ###############################################################################
 
 import sys
-sys.path.insert(0, '../util')
+sys.path.insert(0, '../../lib')
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from numpy.linalg import norm
@@ -38,6 +38,11 @@ X = []
 Y = []
 Z = []
 plt.figure()
+############################################################
+#
+# This portion builds the initial leg
+#
+############################################################
 theta = linspace(-pi/2,pi/2)
 X = hstack([X,zeros(len(theta))])
 Y = hstack([Y,0.4+0.6*cos(theta)])
@@ -47,49 +52,70 @@ X = hstack([X,zeros(len(theta))])
 Y = hstack([Y,0.4+0.2*cos(theta)])
 Z = hstack([Z,0.09 + 0.75*sin(theta)])
 theta = linspace(pi,3*pi/2)
-
 X = hstack([X,-0.2-0.2*cos(theta)])
 Y = hstack([Y,0.2+zeros(len(theta))])
 Z = hstack([Z,0.09+0.75*sin(theta)])
+############################################################
+#
+# This portion builds a mirror image of the first leg,
+# but doesn't add it to anything yet. This will be needed
+# when we need to switch the handedness of the central
+# turn when we come form the top rather than the bottom
+#
+############################################################
+ccwLeg = -X
+ccwLeg = Y
+ccwLeg = -Z
+
+############################################################
+#
+# This portion builds one iteration of the central turn
+# and adds it to the initial leg. There is a discontinuity
+# between the two that I don't likem but I'm not ready to
+# figure out how to ficx it just yet.
+#
+############################################################
 
 alpha = 36+72
 
-stack = vstack([X,Y,-Z])
+stack = vstack([-X,Y,-Z])
 rotStack = r3(deg2rad(alpha)).dot(stack)
 
-theta = linspace(-5*pi/4,3*pi/4+2*pi+deg2rad(alpha),100)
-Xspiral = sqrt(0.08)*cos(theta)
-Yspiral = sqrt(0.08)*sin(theta)
+theta = linspace(-5*pi/4,2*pi+deg2rad(alpha+200),100)
+phi = linspace(0,2*pi,100)
+Xspiral = sqrt(0.08)*cos(theta)*(1 + 0.6*sin(phi)**2)
+Yspiral = sqrt(0.08)*sin(theta)*(1 + 0.6*sin(phi)**2)
 Zspiral = -0.66+0.01*linspace(0,66*2,100)
 
 X = hstack([X,Xspiral])
 Y = hstack([Y,Yspiral])
 Z = hstack([Z,Zspiral])
 
+theta = linspace(2*pi+deg2rad(alpha+200),-5*pi/4,100)
+Xspiral = sqrt(0.08)*cos(theta)*(1 + 0.6*sin(phi)**2)
+Yspiral = sqrt(0.08)*sin(theta)*(1 + 0.6*sin(phi)**2)
+Zspiral = 0.66-0.01*linspace(0,66*2,100)
+
 spiralStack = vstack([Xspiral,Yspiral,Zspiral])
-rotSpiralStack = r3(deg2rad(alpha)).dot(spiralStack)
+rotSpiralStack = r3(deg2rad(alpha-72)).dot(spiralStack)
 
 X = hstack([X,rotStack[0]])
 Y = hstack([Y,rotStack[1]])
 Z = hstack([Z,rotStack[2]])
 
-theta = linspace(-5*pi/4,3*pi/4+2*pi+deg2rad(alpha),100)
-X = hstack([X,sqrt(0.08)*cos(theta)])
-Y = hstack([Y,sqrt(0.08)*sin(theta)])
-Z = hstack([Z,-0.66+0.01*linspace(0,66*2,100)])
-
 X = hstack([X,rotSpiralStack[0]])
 Y = hstack([Y,rotSpiralStack[1]])
 Z = hstack([Z,rotSpiralStack[2]])
 
+beta = 36
 stack1 = vstack([X,Y,Z])
-rotStack1 = r3(deg2rad(2*alpha)).dot(stack1)
+rotStack1 = r3(deg2rad(2*beta)).dot(stack1)
 stack2 = vstack([X,Y,Z])
-rotStack2 = r3(deg2rad(4*alpha)).dot(stack2)
+rotStack2 = r3(deg2rad(4*beta)).dot(stack2)
 stack3 = vstack([X,Y,Z])
-rotStack3 = r3(deg2rad(6*alpha)).dot(stack3)
+rotStack3 = r3(deg2rad(6*beta)).dot(stack3)
 stack4 = vstack([X,Y,Z])
-rotStack4 = r3(deg2rad(8*alpha)).dot(stack4)
+rotStack4 = r3(deg2rad(8*beta)).dot(stack4)
 
 X = hstack([X,rotStack1[0]])
 Y = hstack([Y,rotStack1[1]])
@@ -107,12 +133,15 @@ X = hstack([X,rotStack4[0]])
 Y = hstack([Y,rotStack4[1]])
 Z = hstack([Z,rotStack4[2]])
 
+X = hstack([X,X[0]])
+Y = hstack([Y,Y[0]])
+Z = hstack([Z,Z[0]])
 
 
 plt.axis('equal')
 
 
-X0 = vstack([X,Y,Z]).T
+X0 = 10*vstack([X,Y,Z]).T
 # X1 = (r3(deg2rad(360/5)).dot(X0.T)).T
 # X2 = (r3(deg2rad(360/5)).dot(X1.T)).T
 # X3 = (r3(deg2rad(360/5)).dot(X2.T)).T
